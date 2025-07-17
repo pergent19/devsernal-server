@@ -6,8 +6,25 @@ const chatRoutes = require('./routes/chatRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable trust proxy for Render's reverse proxy
+app.set('trust proxy', 1); // Trust the first proxy (Render's load balancer)
+
+// Configure CORS to allow multiple origins
+const allowedOrigins = [
+  process.env.CORS_ORIGIN || 'https://your-frontend.onrender.com', // Production frontend
+  'http://localhost:5173', // Local development
+];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'https://deployment.com' : 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., non-browser clients like Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, origin);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true,
 }));
