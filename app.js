@@ -2,9 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const chatRoutes = require('./routes/chatRoutes');
+const logger = require('./helpers/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ENVIRONMENT = process.env.NODE_ENV || 'development';
 
 // Enable trust proxy for Render's reverse proxy
 app.set('trust proxy', 1); // Trust the first proxy (Render's load balancer)
@@ -46,7 +48,6 @@ app.use(globalLimiter);
 app.use('/api', chatRoutes);
 
 // Error handling middleware
-// Error handling middleware
 app.use((err, req, res, next) => {
   logger.error('Server error', {
     error: err.message,
@@ -67,5 +68,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  logger.info(`Server started`, { port: PORT, environment: process.env.NODE_ENV });
+  logger.info(`Server started`, { port: PORT, environment: ENVIRONMENT });
 });
