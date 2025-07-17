@@ -46,11 +46,26 @@ app.use(globalLimiter);
 app.use('/api', chatRoutes);
 
 // Error handling middleware
+// Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error('Server error', {
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+  });
+
+  if (err.message.includes('CORS')) {
+    return res.status(403).json({ error: 'CORS error', detail: err.message });
+  }
+
+  if (err.status === 429) {
+    return res.status(429).json({ error: 'Too many requests', detail: err.message });
+  }
+
   res.status(500).json({ error: 'Internal Server Error', detail: err.message });
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  logger.info(`Server started`, { port: PORT, environment: process.env.NODE_ENV });
 });
