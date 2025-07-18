@@ -34,7 +34,15 @@ const generateResponse = async (messages) => {
   }
 
   try {
-    const history = messages.map((msg) => ({
+
+    const systemInstruction = {
+      role: 'user',
+      content: 'You are an AI that answers only technology-related questions. If the question is not about programming, software development, or IT, respond with: "Sorry, I only answer technology-related questions."'
+    };
+
+    const fullMessages = [systemInstruction, ...messages];
+    
+    const history = fullMessages.map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.content }],
     }));
