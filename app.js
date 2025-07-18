@@ -13,7 +13,7 @@ app.set('trust proxy', 1); // Trust the first proxy (Render's load balancer)
 
 // Configure CORS to allow multiple origins
 const allowedOrigins = [
-  process.env.CORS_ORIGIN || 'https://your-frontend.onrender.com', // Production frontend
+  process.env.CORS_ORIGIN || 'https://devsernal.netlify.app', // Production frontend
   'http://localhost:5173', // Local development
 ];
 
