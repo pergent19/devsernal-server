@@ -2,12 +2,13 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const NodeCache = require('node-cache');
 const logger = require('../helpers/logger');
 const truncateContent = require('../helpers/truncateContent');
+const { getCachedResponse, setCachedResponse } = require('../helpers/cacheHelper');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
 // Initialize cache
-const cache = new NodeCache({ stdTTL: 600, checkperiod: 120 });
+// const cache = new NodeCache({ stdTTL: 600, checkperiod: 120 });
 
 // Initialize GoogleGenerativeAI
 const apiKey = process.env.GEMINI_API_KEY;
@@ -24,14 +25,25 @@ const generateResponse = async (messages) => {
     throw new Error('Missing or invalid messages array');
   }
 
-  const cacheKey = messages[messages.length - 1].content.trim().toLowerCase();
-  const cachedResponse = cache.get(cacheKey);
-  if (cachedResponse) {
-    logger.info('Cache hit', { cacheKey });
-    return cachedResponse;
-  } else {
-    logger.info('Cache miss', { cacheKey });
+  // const cacheKey = messages[messages.length - 1].content.trim().toLowerCase();
+  // const cachedResponse = cache.get(cacheKey);
+  // if (cachedResponse) {
+  //   logger.info('Cache hit', { cacheKey });
+  //   return cachedResponse;
+  // } else {
+  //   logger.info('Cache miss', { cacheKey });
+  // }
+    // Check cache first
+  // Check cache first
+  const cacheResult = getCachedResponse(messages);
+  
+  // If cache hit, return the response
+  if (cacheResult && cacheResult.fromCache) {
+    return cacheResult;
   }
+  
+  // Get cacheKey for logging (from cache miss result)
+  const cacheKey = cacheResult?.cacheKey;
 
   try {
 
@@ -89,7 +101,8 @@ const generateResponse = async (messages) => {
       timeStamp: new Date().toISOString(),
     };
 
-    cache.set(cacheKey, responseData);
+    // cache.set(cacheKey, responseData);
+    setCachedResponse(messages, responseData);
     logger.info('Cache set and response generated', {
       cacheKey,
       duration,
