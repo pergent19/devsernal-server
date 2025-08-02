@@ -6,7 +6,7 @@ require('dotenv').config();
 const PING_URL = process.env.PING_URL || 'http://localhost:3000';
 
 const schedulePing = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('*/10 * * * *', async () => {
     try {
       const response = await axios.get(`${PING_URL}/ping`);
       logger.info('Ping successful', { status: response.status });
