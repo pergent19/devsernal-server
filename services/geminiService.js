@@ -7,10 +7,6 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Initialize cache
-// const cache = new NodeCache({ stdTTL: 600, checkperiod: 120 });
-
-// Initialize GoogleGenerativeAI
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
   logger.error('GEMINI_API_KEY is not set in environment variables');
@@ -25,16 +21,6 @@ const generateResponse = async (messages) => {
     throw new Error('Missing or invalid messages array');
   }
 
-  // const cacheKey = messages[messages.length - 1].content.trim().toLowerCase();
-  // const cachedResponse = cache.get(cacheKey);
-  // if (cachedResponse) {
-  //   logger.info('Cache hit', { cacheKey });
-  //   return cachedResponse;
-  // } else {
-  //   logger.info('Cache miss', { cacheKey });
-  // }
-    // Check cache first
-  // Check cache first
   const cacheResult = getCachedResponse(messages);
   
   // If cache hit, return the response
@@ -101,7 +87,6 @@ const generateResponse = async (messages) => {
       timeStamp: new Date().toISOString(),
     };
 
-    // cache.set(cacheKey, responseData);
     setCachedResponse(messages, responseData);
     logger.info('Cache set and response generated', {
       cacheKey,

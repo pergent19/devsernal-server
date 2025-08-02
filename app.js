@@ -1,53 +1,25 @@
 const express = require('express');
-const cors = require('cors');
-const rateLimit = require('express-rate-limit');
 const chatRoutes = require('./routes/chatRoutes');
 const logger = require('./helpers/logger');
+const corsConfig = require('./config/corsConfig');
+const rateLimiter = require('./config/rateLimiter');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const ENVIRONMENT = process.env.NODE_ENV || 'development';
 
-// Enable trust proxy for Render's reverse proxy
-app.set('trust proxy', 1); // Trust the first proxy (Render's load balancer)
-
-// Configure CORS to allow multiple origins
-const allowedOrigins = [
-  process.env.CORS_ORIGIN || 'https://devsernal.netlify.app', // Production frontend
-  'http://localhost:5173', // Local development
-];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (e.g., non-browser clients like Postman)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      callback(null, origin);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'OPTIONS'],
-  credentials: true,
-}));
-
+// Middleware
+app.set('trust proxy', 1);
+app.use(corsConfig);
 app.use(express.json());
-
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  message: {
-    status: 429,
-    error: 'Too many requests, please try again later.',
-  },
-});
-
-app.use(globalLimiter);
+app.use(rateLimiter);
 
 // Routes
 app.use('/api', chatRoutes);
 
-// Error handling middleware
+app.get('/ping', (req, res) => {
+  res.status(200).json({ message: 'Server is awake' });
+});
+
+// Error handling
 app.use((err, req, res, next) => {
   logger.error('Server error', {
     error: err.message,
@@ -56,17 +28,7 @@ app.use((err, req, res, next) => {
     method: req.method,
   });
 
-  if (err.message.includes('CORS')) {
-    return res.status(403).json({ error: 'CORS error', detail: err.message });
-  }
-
-  if (err.status === 429) {
-    return res.status(429).json({ error: 'Too many requests', detail: err.message });
-  }
-
   res.status(500).json({ error: 'Internal Server Error', detail: err.message });
 });
 
-app.listen(PORT, () => {
-  logger.info(`Server started`, { port: PORT, environment: ENVIRONMENT });
-});
+module.exports = app;
